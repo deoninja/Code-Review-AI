@@ -51,6 +51,14 @@ export interface AppConfig {
   projectUploadSettings: ProjectUploadSettings;
 }
 
+export interface ConfigHistoryEntry {
+  timestamp: number;
+  config: AppConfig;
+}
+
+export const MAX_HISTORY_ENTRIES = 10;
+
+
 // Default constants for project uploads
 export const DEFAULT_ALLOWED_FILE_EXTENSIONS = [
     '.js', '.jsx', '.ts', '.tsx', '.py', '.java', '.cs', '.go', '.rs', '.rb', '.php',

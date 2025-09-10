@@ -4,7 +4,7 @@ import CodeInput from './components/CodeInput';
 import FeedbackDisplay from './components/FeedbackDisplay';
 import SettingsModal from './components/SettingsModal';
 import { reviewCode, reviewProject, ProjectFile } from './services/aiService';
-import { SUPPORTED_LANGUAGES, AIProviderId, AppConfig, DEFAULT_CONFIG } from './constants';
+import { SUPPORTED_LANGUAGES, AIProviderId, AppConfig, DEFAULT_CONFIG, ConfigHistoryEntry, MAX_HISTORY_ENTRIES } from './constants';
 
 export type InputMode = 'snippet' | 'project';
 
@@ -22,22 +22,19 @@ const App: React.FC = () => {
 
   useEffect(() => {
     try {
-      const savedConfig = localStorage.getItem('codeReviewAIConfig');
-      if (savedConfig) {
-        const parsedConfig = JSON.parse(savedConfig);
-        // Merge saved config with defaults to ensure all keys are present
-        const mergedConfig = {
-          ...DEFAULT_CONFIG,
-          ...parsedConfig,
-          ollama: { ...DEFAULT_CONFIG.ollama, ...parsedConfig.ollama },
-          lmstudio: { ...DEFAULT_CONFIG.lmstudio, ...parsedConfig.lmstudio },
-          projectUploadSettings: { ...DEFAULT_CONFIG.projectUploadSettings, ...parsedConfig.projectUploadSettings },
-        };
-        setConfig(mergedConfig);
+      const historyStr = localStorage.getItem('codeReviewAIConfigHistory');
+      if (historyStr) {
+        const history: ConfigHistoryEntry[] = JSON.parse(historyStr);
+        if (history.length > 0) {
+          setConfig(history[0].config); // Load the latest config from history
+          return;
+        }
       }
     } catch (err) {
-      console.error('Failed to load config from localStorage:', err);
+      console.error('Failed to load config history from localStorage:', err);
     }
+    // Fallback to default if no history is found
+    setConfig(DEFAULT_CONFIG);
   }, []);
 
   const handleReview = useCallback(async () => {
@@ -79,7 +76,19 @@ const App: React.FC = () => {
   const handleSaveConfig = (newConfig: AppConfig) => {
     setConfig(newConfig);
     try {
-      localStorage.setItem('codeReviewAIConfig', JSON.stringify(newConfig));
+      const historyStr = localStorage.getItem('codeReviewAIConfigHistory');
+      const history: ConfigHistoryEntry[] = historyStr ? JSON.parse(historyStr) : [];
+      
+      const newEntry: ConfigHistoryEntry = {
+        timestamp: Date.now(),
+        config: newConfig
+      };
+
+      // Add new entry, remove duplicates by stringifying for comparison, then limit history size
+      const updatedHistory = [newEntry, ...history]
+        .slice(0, MAX_HISTORY_ENTRIES);
+
+      localStorage.setItem('codeReviewAIConfigHistory', JSON.stringify(updatedHistory));
     } catch (err) {
       console.error('Failed to save config to localStorage:', err);
     }

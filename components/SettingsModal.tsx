@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { AppConfig, ProjectUploadSettings, DEFAULT_CONFIG } from '../constants';
+import { AppConfig, ProjectUploadSettings, DEFAULT_CONFIG, ConfigHistoryEntry } from '../constants';
 import { RotateCcwIcon } from './icons/RotateCcwIcon';
+import { HistoryIcon } from './icons/HistoryIcon';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -35,9 +36,23 @@ const SettingsTextarea: React.FC<{
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, config, onSave }) => {
   const [currentConfig, setCurrentConfig] = useState<AppConfig>(config);
+  const [history, setHistory] = useState<ConfigHistoryEntry[]>([]);
 
   useEffect(() => {
     setCurrentConfig(config);
+    if (isOpen) {
+      try {
+        const historyStr = localStorage.getItem('codeReviewAIConfigHistory');
+        if (historyStr) {
+          setHistory(JSON.parse(historyStr));
+        } else {
+          setHistory([]);
+        }
+      } catch (err) {
+        console.error('Failed to load config history:', err);
+        setHistory([]);
+      }
+    }
   }, [config, isOpen]);
 
   if (!isOpen) {
@@ -46,6 +61,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, config, 
 
   const handleSave = () => {
     onSave(currentConfig);
+  };
+
+  const handleRevert = (configToRevert: AppConfig) => {
+    onSave(configToRevert);
   };
   
   const handleLocalInputChange = (provider: 'ollama' | 'lmstudio', field: 'url' | 'model', value: string) => {
@@ -185,6 +204,40 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, config, 
                         Reset to Defaults
                       </button>
                     </div>
+                </div>
+            </details>
+
+            {/* Configuration History */}
+            <details className="group">
+                <summary className="text-lg font-semibold text-brand-pine mb-3 cursor-pointer list-none flex justify-between items-center">
+                    Configuration History
+                    <span className="text-xs group-open:rotate-90 transform transition-transform duration-200">&#9656;</span>
+                </summary>
+                <div className="space-y-2 pl-2 border-l-2 border-brand-highlight-low">
+                  {history.length > 0 ? (
+                    <ul className="space-y-2">
+                      {history.map((entry, index) => (
+                        <li key={entry.timestamp} className="flex items-center justify-between p-2 bg-brand-highlight-low rounded-md text-sm">
+                          <span className="text-brand-subtle">
+                            {new Date(entry.timestamp).toLocaleString()}
+                            {index === 0 && <span className="text-xs font-semibold text-brand-foam ml-2">(Current)</span>}
+                          </span>
+                          {index > 0 && (
+                            <button 
+                              onClick={() => handleRevert(entry.config)} 
+                              className="flex items-center gap-1.5 text-brand-foam hover:text-brand-love font-semibold transition-colors duration-200"
+                              aria-label={`Revert to configuration from ${new Date(entry.timestamp).toLocaleString()}`}
+                            >
+                              <HistoryIcon className="w-4 h-4" />
+                              Revert
+                            </button>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-brand-muted p-2">No previous configurations saved.</p>
+                  )}
                 </div>
             </details>
         </div>
