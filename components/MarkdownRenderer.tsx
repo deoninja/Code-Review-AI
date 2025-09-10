@@ -6,12 +6,25 @@ interface MarkdownRendererProps {
 }
 
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
+  // SVG for an inline file icon, styled to fit with the text.
+  const fileIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block -mt-px"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>`;
+
   const renderLine = (line: string) => {
-    // Inline code
-    line = line.replace(/`([^`]+)`/g, '<code class="bg-brand-highlight-low text-brand-gold px-1 py-0.5 rounded text-sm">$1</code>');
-    
     // Bold
     line = line.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    
+    // Highlight file paths first, as they are a more specific pattern.
+    // This looks for `path/to/file.ext` or `file.ext` inside backticks.
+    line = line.replace(
+      /`([a-zA-Z0-9_\-./\\]+\.[a-zA-Z0-9_]+)`/g,
+      `<code class="bg-brand-pine/20 text-brand-foam px-1.5 py-0.5 rounded text-sm font-medium inline-flex items-center gap-1.5" role="button" aria-label="File path: $1">${fileIconSvg}$1</code>`
+    );
+
+    // Highlight general inline code (any remaining content in backticks).
+    line = line.replace(
+      /`([^`]+)`/g, 
+      '<code class="bg-brand-highlight-low text-brand-gold px-1 py-0.5 rounded text-sm">$1</code>'
+    );
     
     return { __html: line };
   };
