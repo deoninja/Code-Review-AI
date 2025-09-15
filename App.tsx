@@ -152,6 +152,7 @@ const App: React.FC = () => {
        />
       <footer className="text-center p-4 text-brand-muted text-sm">
         <p>Powered by AI. Built for developers.</p>
+        <p>By Deo Trinidad.</p>
       </footer>
     </div>
   );
