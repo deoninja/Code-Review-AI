@@ -1,10 +1,12 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import Header from './components/Header';
 import CodeInput from './components/CodeInput';
 import FeedbackDisplay from './components/FeedbackDisplay';
 import SettingsModal from './components/SettingsModal';
 import { reviewCode, reviewProject, ProjectFile } from './services/aiService';
-import { SUPPORTED_LANGUAGES, AIProviderId, AppConfig, DEFAULT_CONFIG, ConfigHistoryEntry, MAX_HISTORY_ENTRIES } from './constants';
+import { SUPPORTED_LANGUAGES, AIProviderId, AppConfig, DEFAULT_CONFIG, ConfigHistoryEntry, MAX_HISTORY_ENTRIES, SAMPLE_CODE_SNIPPET } from './constants';
+import { LinterIssue } from './services/linterService';
 
 export type InputMode = 'snippet' | 'project';
 
@@ -19,6 +21,7 @@ const App: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [config, setConfig] = useState<AppConfig>(DEFAULT_CONFIG);
   const [inputMode, setInputMode] = useState<InputMode>('snippet');
+  const [linterIssues, setLinterIssues] = useState<LinterIssue[]>([]);
 
   useEffect(() => {
     try {
@@ -71,6 +74,7 @@ const App: React.FC = () => {
     setFeedback('');
     setError(null);
     setIsLoading(false);
+    setLinterIssues([]);
   }, []);
 
   const handleSaveConfig = (newConfig: AppConfig) => {
@@ -94,11 +98,21 @@ const App: React.FC = () => {
     }
     setIsSettingsOpen(false);
   };
+  
+  const handleLoadSample = useCallback(() => {
+    setCode(SAMPLE_CODE_SNIPPET);
+    setLanguage('javascript');
+    setInputMode('snippet');
+    setFeedback('');
+    setError(null);
+    setLinterIssues([]);
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col font-sans">
       <Header 
         provider={aiProvider} 
+        // FIX: Changed `setProvider` to `setAiProvider` to match the state setter function name.
         setProvider={setAiProvider} 
         onSettingsClick={() => setIsSettingsOpen(true)}
       />
@@ -117,6 +131,7 @@ const App: React.FC = () => {
             inputMode={inputMode}
             setInputMode={setInputMode}
             projectUploadSettings={config.projectUploadSettings}
+            setLinterIssues={setLinterIssues}
           />
         </div>
         <div className="lg:w-1/2 flex flex-col">
@@ -124,6 +139,8 @@ const App: React.FC = () => {
             feedback={feedback}
             isLoading={isLoading}
             error={error}
+            linterIssues={linterIssues}
+            onLoadSample={handleLoadSample}
           />
         </div>
       </main>

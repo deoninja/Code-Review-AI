@@ -1,3 +1,4 @@
+
 export interface Language {
   id: string;
   name: string;
@@ -85,3 +86,25 @@ export const DEFAULT_CONFIG: AppConfig = {
     ignoredFiles: DEFAULT_IGNORED_FILES,
   }
 };
+
+export const SAMPLE_CODE_SNIPPET = `// This function has a few issues for the AI to find.
+function processNumbers(data) {
+  var largest = 0; // Bug: Fails for lists of only negative numbers.
+  var sum = "0";   // Bug: Should be a number, not a string.
+
+  // Inefficiently finds the largest number in a nested loop.
+  for (var i = 0; i < data.length; i++) {
+    for (var j = 0; j < data.length; j++) {
+      if (data[j] > largest) {
+        largest = data[j];
+      }
+    }
+    sum = sum + data[i]; // Performance: String concatenation in a loop is slow.
+  }
+  
+  // 'var' is outdated; 'let' or 'const' should be used.
+  console.log("The largest number is: " + largest);
+  console.log("The sum is: " + sum);
+
+  return { largest, sum };
+}`;

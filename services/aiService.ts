@@ -110,11 +110,11 @@ const callGemini = async (input: string | ProjectFile[], language: string, confi
         console.error("Error calling Gemini API:", error);
         if (error instanceof Error) {
             if (error.message.includes('API key not valid')) {
-                return "Error: The provided Gemini API key is not valid. Please check it in the settings.";
+                throw new Error("The provided Gemini API key is not valid. Please check it in the settings.");
             }
-            return `An error occurred while communicating with the Gemini API: ${error.message}`;
+            throw new Error(`An error occurred while communicating with the Gemini API: ${error.message}`);
         }
-        return "An unexpected error occurred during the code review with Gemini.";
+        throw new Error("An unexpected error occurred during the code review with Gemini.");
     }
 };
 
@@ -161,7 +161,7 @@ const callLocalLLM = async (input: string | ProjectFile[], language: string, pro
     } catch (error) {
         console.error(`Error calling ${providerName} at ${url}:`, error);
         if (error instanceof TypeError) { 
-             throw new Error(`Could not connect to ${providerName}. Please ensure it is running and accessible at ${url}.`);
+             throw new Error(`Could not connect to ${providerName} at ${url}.\n\nCommon reasons for this error include:\n1. The local AI server is not running.\n2. The URL in the settings is incorrect.\n3. The server is not configured to allow requests from this web page (CORS policy). You may need to start your server with a CORS-enabled flag (e.g., --cors) or adjust its configuration.`);
         }
         throw error;
     }
